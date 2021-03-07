@@ -24,18 +24,53 @@ byte *VGA=(byte *)0xA0000000L;        /* this points to video memory. */
 word *my_clock=(word *)0x0000046C;    /* this points to the 18.2hz system
                                          clock. */
 										 
+bool double_buffer_enabled;										 
+unsigned char *DOUBLE_BUFF;
+										 
+void initialize_graphics(bool dblbfr){
+	int ret;
+	
+	double_buffer_enabled = dblbfr;
+	DOUBLE_BUFF = (unsigned char *) malloc(320*200);
+	if (DOUBLE_BUFF==NULL)
+	{
+		printf("Not enough memory for double buffer.\n");
+		exit(1);
+	}
+	
+	memset(DOUBLE_BUFF,0,SCREEN_SIZE);
+	ret = set_mode(VGA_256_COLOR_MODE);       /* set the video mode. */
+	//printf("RET:%d\n",ret);
+	
+}
+
+
+/**************************************************************************
+ *  show_buffer                                                           *
+ *    displays a memory buffer on the screen                              *
+ **************************************************************************/
+void show_buffer()
+{
+  #ifdef VERTICAL_RETRACE
+    while ((inp(INPUT_STATUS_1) & VRETRACE));
+    while (!(inp(INPUT_STATUS_1) & VRETRACE));
+  #endif
+  memcpy(VGA,DOUBLE_BUFF,SCREEN_SIZE);
+}
+										 
+										 
 /**************************************************************************
  *  set_mode                                                              *
  *     Sets the video mode.                                               *
  **************************************************************************/
 
-void set_mode(byte mode)
+int set_mode(byte mode)
 {
   union REGS regs;
 
   regs.h.ah = SET_MODE;
   regs.h.al = mode;
-  int86(VIDEO_INT, &regs, &regs);
+  return int86(VIDEO_INT, &regs, &regs);
 }
 
 /**************************************************************************
@@ -46,8 +81,12 @@ void set_mode(byte mode)
 
 void plot_pixel(int x,int y,byte color)
 {
-  /*  y*320 = y*256 + y*64 = y*2^8 + y*2^6   */
-  VGA[(y<<8)+(y<<6)+x]=color;
+	if(double_buffer_enabled){
+		DOUBLE_BUFF[(y<<8)+(y<<6)+x]=color;
+	}else{
+		/*  y*320 = y*256 + y*64 = y*2^8 + y*2^6   */
+		VGA[(y<<8)+(y<<6)+x]=color;
+	}
 }		
 
 /**************************************************************************
@@ -71,7 +110,11 @@ void line_fast(int x1, int y1, int x2, int y2, byte color)
   px=x1;
   py=y1;
 
-  VGA[(py<<8)+(py<<6)+px]=color;
+	if(double_buffer_enabled){
+		DOUBLE_BUFF[(py<<8)+(py<<6)+px]=color;
+	}else{
+		VGA[(py<<8)+(py<<6)+px]=color;
+	}
 
   if (dxabs>=dyabs) /* the line is more horizontal than vertical */
   {
@@ -119,14 +162,26 @@ void circle_fast(int x,int y, int radius, byte color)
   {
     dxoffset = (dx<<8) + (dx<<6);
     dyoffset = (dy<<8) + (dy<<6);
-    VGA[offset+dy-dxoffset] = color;  /* octant 0 */
-    VGA[offset+dx-dyoffset] = color;  /* octant 1 */
-    VGA[offset-dx-dyoffset] = color;  /* octant 2 */
-    VGA[offset-dy-dxoffset] = color;  /* octant 3 */
-    VGA[offset-dy+dxoffset] = color;  /* octant 4 */
-    VGA[offset-dx+dyoffset] = color;  /* octant 5 */
-    VGA[offset+dx+dyoffset] = color;  /* octant 6 */
-    VGA[offset+dy+dxoffset] = color;  /* octant 7 */
+	
+	if(double_buffer_enabled){
+		DOUBLE_BUFF[offset+dy-dxoffset] = color;  /* octant 0 */
+		DOUBLE_BUFF[offset+dx-dyoffset] = color;  /* octant 1 */
+		DOUBLE_BUFF[offset-dx-dyoffset] = color;  /* octant 2 */
+		DOUBLE_BUFF[offset-dy-dxoffset] = color;  /* octant 3 */
+		DOUBLE_BUFF[offset-dy+dxoffset] = color;  /* octant 4 */
+		DOUBLE_BUFF[offset-dx+dyoffset] = color;  /* octant 5 */
+		DOUBLE_BUFF[offset+dx+dyoffset] = color;  /* octant 6 */
+		DOUBLE_BUFF[offset+dy+dxoffset] = color;  /* octant 7 */
+	}else{
+		VGA[offset+dy-dxoffset] = color;  /* octant 0 */
+		VGA[offset+dx-dyoffset] = color;  /* octant 1 */
+		VGA[offset-dx-dyoffset] = color;  /* octant 2 */
+		VGA[offset-dy-dxoffset] = color;  /* octant 3 */
+		VGA[offset-dy+dxoffset] = color;  /* octant 4 */
+		VGA[offset-dx+dyoffset] = color;  /* octant 5 */
+		VGA[offset+dx+dyoffset] = color;  /* octant 6 */
+		VGA[offset+dy+dxoffset] = color;  /* octant 7 */
+	}
     dx++;
     n+=invradius;
     dy = (int)((radius * SIN_ACOS[(int)(n>>6)]) >> 16);
@@ -150,14 +205,25 @@ void circle_fill(int x,int y, int radius, byte color)
     dyoffset = (dy<<8) + (dy<<6);
     for(i=dy;i>=dx;i--,dyoffset-=SCREEN_WIDTH)
     {
-      VGA[offset+i -dxoffset] = color;  /* octant 0 */
-      VGA[offset+dx-dyoffset] = color;  /* octant 1 */
-      VGA[offset-dx-dyoffset] = color;  /* octant 2 */
-      VGA[offset-i -dxoffset] = color;  /* octant 3 */
-      VGA[offset-i +dxoffset] = color;  /* octant 4 */
-      VGA[offset-dx+dyoffset] = color;  /* octant 5 */
-      VGA[offset+dx+dyoffset] = color;  /* octant 6 */
-      VGA[offset+i +dxoffset] = color;  /* octant 7 */
+		if(double_buffer_enabled){
+			  DOUBLE_BUFF[offset+i -dxoffset] = color;  /* octant 0 */
+			  DOUBLE_BUFF[offset+dx-dyoffset] = color;  /* octant 1 */
+			  DOUBLE_BUFF[offset-dx-dyoffset] = color;  /* octant 2 */
+			  DOUBLE_BUFF[offset-i -dxoffset] = color;  /* octant 3 */
+			  DOUBLE_BUFF[offset-i +dxoffset] = color;  /* octant 4 */
+			  DOUBLE_BUFF[offset-dx+dyoffset] = color;  /* octant 5 */
+			  DOUBLE_BUFF[offset+dx+dyoffset] = color;  /* octant 6 */
+			  DOUBLE_BUFF[offset+i +dxoffset] = color;  /* octant 7 */
+		}else{
+			  VGA[offset+i -dxoffset] = color;  /* octant 0 */
+			  VGA[offset+dx-dyoffset] = color;  /* octant 1 */
+			  VGA[offset-dx-dyoffset] = color;  /* octant 2 */
+			  VGA[offset-i -dxoffset] = color;  /* octant 3 */
+			  VGA[offset-i +dxoffset] = color;  /* octant 4 */
+			  VGA[offset-dx+dyoffset] = color;  /* octant 5 */
+			  VGA[offset+dx+dyoffset] = color;  /* octant 6 */
+			  VGA[offset+i +dxoffset] = color;  /* octant 7 */
+		}
     }
     dx++;
     n+=invradius;
@@ -192,13 +258,23 @@ void rect_fast(int left,int top, int right, int bottom, byte color)
 
   for(i=left;i<=right;i++)
   {
-    VGA[top_offset+i]=color;
-    VGA[bottom_offset+i]=color;
+	  if(double_buffer_enabled){
+		DOUBLE_BUFF[top_offset+i]=color;
+		DOUBLE_BUFF[bottom_offset+i]=color;
+	  }else{
+		VGA[top_offset+i]=color;
+		VGA[bottom_offset+i]=color;
+	  }
   }
   for(i=top_offset;i<=bottom_offset;i+=SCREEN_WIDTH)
   {
-    VGA[left+i]=color;
-    VGA[right+i]=color;
+	  if(double_buffer_enabled){
+			DOUBLE_BUFF[left+i]=color;
+			DOUBLE_BUFF[right+i]=color;
+	  }else{
+			VGA[left+i]=color;
+			VGA[right+i]=color;
+	  }
   }
 }
 
@@ -230,7 +306,11 @@ void rect_fill(int left,int top, int right, int bottom, byte color)
 
   for(i=top_offset;i<=bottom_offset;i+=SCREEN_WIDTH)
   {
-    memset(&VGA[i],color,width);
+	  if(double_buffer_enabled){
+		  memset(&DOUBLE_BUFF[i],color,width);
+	  }else{
+		memset(&VGA[i],color,width);
+	  }
   }
 }
 
