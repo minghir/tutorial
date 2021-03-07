@@ -14,13 +14,29 @@ typedef unsigned short word;
 typedef long fixed16_16;
 
 
+//#define VERTICAL_RETRACE              /* comment out this line for more    accurate timing */
+#define VRETRACE            0x08
+#define INPUT_STATUS_1      0x03da
+#define SCREEN_SIZE         (word)(SCREEN_WIDTH*SCREEN_HEIGHT)
+
+#define true 1
+#define false 0
+typedef int bool;
+
+
+void initialize_graphics(bool dblbfr);
+
+void show_buffer();
+
+	
+
 										 
 /**************************************************************************
  *  set_mode                                                              *
  *     Sets the video mode.                                               *
  **************************************************************************/
 
-void set_mode(byte mode);
+int set_mode(byte mode);
 
 /**************************************************************************
  *  plot_pixel                                                            *
