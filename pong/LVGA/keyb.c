@@ -13,7 +13,6 @@ unsigned char normal_keys[0x60];
 unsigned char extended_keys[0x60];
 
 static void interrupt keyb_int() {
-//void interrupt keyb_int() {
     static unsigned char buffer;
     unsigned char rawcode;
     unsigned char make_break;
@@ -39,7 +38,6 @@ static void interrupt keyb_int() {
     outp(0x20, 0x20); /* must send EOI to finish interrupt */
 }
 
-//void interrupt (*old_keyb_int)();
 static void interrupt (*old_keyb_int)();
 
 void hook_keyb_int(void) {
@@ -60,7 +58,7 @@ int ctrlbrk_handler(void) {
     return 0;
 }
 
-int get_key_status(unsigned char ch){ // 1 pressed  0 not
+unsigned int get_key_status(unsigned char ch){ // 1 pressed  0 not
 	return normal_keys[ch];
 }
 
