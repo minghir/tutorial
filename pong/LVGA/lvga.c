@@ -28,7 +28,7 @@ bool double_buffer_enabled;
 unsigned char *DOUBLE_BUFF;
 										 
 void initialize_graphics(bool dblbfr){
-	int ret,i;
+	int i;
 	
 	for(i=0;i<1024;i++)                 /* create the sin(arccos(x)) table. */
 	{
@@ -533,16 +533,12 @@ void wait(int ticks)
 /* VGA256.C
    The source file for the functions that render dots, circles, lines
    and text in VGA Mode 13H.
-
    The video mode capable of displaying 320x200 pixels in 256 colors.
-
    This was written by Gary Wilkerson Jr for use by the entire gaming
    community.  This code is not copyrighted nor do I expect any of it
    to be copyrighted.  This code is to be 'common knowledge' among the
    gaming community.
-
    You are free to use and modify it in any way as you see fit.
-
    Happy programming.
 */
 
