@@ -140,7 +140,3 @@ void rect_fill(int left,int top, int right, int bottom, byte color);
 void put_ch(int x, int y, int c, int fc, int bc);
 void put_str(int x, int y, char *string, int fc, int bc);
 void Circle(int x, int y, int radius, unsigned char color);
-
-
-								 
-
