@@ -6,6 +6,8 @@
 #define s_Key 0x1F
 #define q_Key 0x10
 #define esc_Key 0x01
+#define f1_Key 0x3B
+
 
 //void interrupt keyb_int();
 //void interrupt (*old_keyb_int)();
