@@ -1,7 +1,14 @@
+/*
+void mainImage( out vec4 fragColor, in vec2 fragCoord ){
+    fragCoord = (fragCoord-0.5*iResolution.xy)/iResolution.y+cos(fragCoord.yx)*sin(fragCoord.yx);
+     vec3 col = vec3(step(sin(iTime/10.)*cos(iTime*10.),fragCoord.x/fragCoord.y));
+     col *= vec3(step(sin(iTime/10.)*cos(iTime*10.),fragCoord.y/fragCoord.x));
+     //col = smoothstep(0.212,0.21,col);
+    fragColor = vec4(vec3(fragCoord.xy,2.)+col,1.);
+   // fragColor = vec4(vec3(col.gr,0.),1.);
+}
+*/
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord ){
-    fragCoord = (fragCoord-0.5*iResolution.xy)/iResolution.y+cos(fragCoord.xy)*sin(fragCoord.yx);
-    //fragCoord *=10.1;
-    fragColor = vec4(vec3(fragCoord.xy,1.),1.);
-
+    fragColor = vec4((fragCoord-.5*iResolution.xy)/iResolution.y+sin(fragCoord.xy)*cos(fragCoord.yx),0.,1.);
 }
