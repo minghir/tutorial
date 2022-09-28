@@ -11,6 +11,12 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ){
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord ){
     fragColor = vec4((fragCoord-.5*iResolution.xy)/iResolution.y+sin(fragCoord.xy)*cos(fragCoord.yx),0.,1.);
+    /*
+     vec3 col  = vec3(
+        step(0.,sin(fragCoord.x/6.)+.99))*step(0.,vec3(sin(fragCoord.y/6.)+.992)
+        );
+        fragColor = vec4(col,1.);
+    */
 }
 /*
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
